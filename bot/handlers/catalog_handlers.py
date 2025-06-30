@@ -2,7 +2,7 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InputMediaPhoto
 from aiogram.fsm.context import FSMContext
 
-from keyboards.catalog_keyboards import get_catalog_menu, get_product_keyboard, get_categories_keyboard
+from keyboards.catalog_keyboards import get_product_keyboard, get_categories_keyboard
 from keyboards.main_keyboards import get_back_to_menu_keyboard
 from utils.catalog import get_products_by_category, get_product_by_id, get_all_categories
 from utils.cart import add_to_cart
