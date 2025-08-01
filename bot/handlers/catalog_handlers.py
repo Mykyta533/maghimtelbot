@@ -1,6 +1,5 @@
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InputMediaPhoto
-from aiogram.fsm.context import FSMContext
 import logging
 
 from keyboards.catalog_keyboards import get_product_keyboard, get_categories_keyboard
@@ -102,7 +101,8 @@ async def navigate_products(callback: CallbackQuery):
 @router.callback_query(F.data.startswith("add_to_cart_"))
 async def add_product_to_cart(callback: CallbackQuery):
     try:
-        product_id = int(callback.data.split("_")[3])
+        # callback_data виглядає як "add_to_cart_5"
+        product_id = int(callback.data.split("_")[-1])
     except (ValueError, IndexError):
         await callback.answer("❌ Невірний ID товару", show_alert=True)
         return
@@ -156,7 +156,7 @@ async def back_to_catalog(callback: CallbackQuery):
 
 async def show_product_in_category(callback: CallbackQuery, products: list, index: int):
     product = products[index]
-    category_id = product.get('category_id', 1)
+    category_id = product.get('category')  # Ось тут правильний ключ
 
     text = (
         f"🧼 <b>{product['name']}</b>\n\n"
