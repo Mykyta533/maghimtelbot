@@ -5,7 +5,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Шлях до файлу catalog.json: на два рівні вище від цього файлу
-CATALOG_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "catalog.json")
+CATALOG_FILE = os.path.join(BASE_DIR, "catalog.json")
 
 def load_catalog():
     """Завантаження каталогу товарів"""
