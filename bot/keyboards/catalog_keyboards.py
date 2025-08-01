@@ -24,11 +24,11 @@ def get_product_keyboard(product_id, current_index=0, total_products=1, category
     keyboard = []
 
     # Кнопки навігації між товарами (якщо товарів більше одного)
-    if total_products > 1:
+    if total_products > 1 and category_id is not None:
         nav_buttons = []
         if current_index > 0:
             nav_buttons.append(
-                InlineKeyboardButton(text="⬅️", callback_data=f"product_prev_{current_index}")
+                InlineKeyboardButton(text="⬅️", callback_data=f"nav_{category_id}_{current_index - 1}")
             )
 
         nav_buttons.append(
@@ -40,7 +40,7 @@ def get_product_keyboard(product_id, current_index=0, total_products=1, category
 
         if current_index < total_products - 1:
             nav_buttons.append(
-                InlineKeyboardButton(text="➡️", callback_data=f"product_next_{current_index}")
+                InlineKeyboardButton(text="➡️", callback_data=f"nav_{category_id}_{current_index + 1}")
             )
 
         keyboard.append(nav_buttons)
