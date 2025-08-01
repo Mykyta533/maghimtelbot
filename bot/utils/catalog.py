@@ -4,7 +4,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Шлях до файлу catalog.json: на два рівні вище від цього файлу
+# Визначаємо базову директорію проєкту (корінь)
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+
+# Повний шлях до файлу catalog.json у корені проєкту
 CATALOG_FILE = os.path.join(BASE_DIR, "catalog.json")
 
 def load_catalog():
