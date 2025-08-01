@@ -1,10 +1,16 @@
+from typing import List, Dict
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-def get_cart_keyboard(cart_items):
-    """Клавіатура для кошика"""
+def get_cart_keyboard(cart_items: List[Dict]) -> InlineKeyboardMarkup:
+    """
+    Клавіатура для кошика
+    
+    :param cart_items: список товарів у кошику, кожен елемент - словник з 'product_id' та 'quantity'
+    :return: InlineKeyboardMarkup з кнопками для керування кошиком
+    """
     keyboard = []
     
-    # Кнопки для кожного товару в кошику
+    # Кнопки для кожного товару в кошику: - | кількість | + | видалити
     for item in cart_items:
         product_id = item['product_id']
         quantity = item['quantity']
@@ -28,8 +34,13 @@ def get_cart_keyboard(cart_items):
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
-def get_checkout_keyboard():
-    """Клавіатура для оформлення замовлення"""
+
+def get_checkout_keyboard() -> InlineKeyboardMarkup:
+    """
+    Клавіатура для вибору способу оплати
+    
+    :return: InlineKeyboardMarkup з кнопками оплати і повернення до кошика
+    """
     keyboard = [
         [
             InlineKeyboardButton(text="💳 LiqPay", callback_data="pay_liqpay"),
