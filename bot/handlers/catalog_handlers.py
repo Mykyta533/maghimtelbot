@@ -85,7 +85,7 @@ async def show_product_details(callback: CallbackQuery):
 async def navigate_products(callback: CallbackQuery):
     """Навігація між товарами в категорії"""
     try:
-        _, category_id, index = callback.data.split("_")
+        _, category_id = int(category_id)
         category_id = int(category_id)
         index = int(index)
     except (ValueError, IndexError):
