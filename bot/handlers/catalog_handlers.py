@@ -40,7 +40,7 @@ async def show_catalog(message: Message):
 async def show_category_products(callback: CallbackQuery):
     """Показ товарів категорії"""
     try:
-        category_id = int(callback.data.split("_")[1])
+        category_id = callback.data.split("_", 1)[1]
     except (ValueError, IndexError):
         await callback.answer("❌ Невірний ID категорії", show_alert=True)
         return
