@@ -26,7 +26,7 @@ async def show_cart(message: Message):
         await message.answer(
             "🛒 Ваш кошик порожній\n\n"
             "Перейдіть до каталогу, щоб додати товари!",
-            reply_markup=get_back_to_menu_keyboard()
+            reply_markup=get_back_to_menu_inline()
         )
         return
 
@@ -107,7 +107,7 @@ async def clear_cart_handler(callback: CallbackQuery):
 
     await callback.message.edit_text(
         "🗑 Ваш кошик очищено!",
-        reply_markup=get_back_to_menu_keyboard()
+        reply_markup=get_back_to_menu_inline()
     )
     await callback.answer("Кошик очищено")
 
@@ -147,7 +147,7 @@ async def back_to_cart(callback: CallbackQuery):
         await callback.message.edit_text(
             "🛒 Ваш кошик порожній\n\n"
             "Перейдіть до каталогу, щоб додати товари!",
-            reply_markup=get_back_to_menu_keyboard()
+            reply_markup=get_back_to_menu_inline()
         )
     else:
         await update_cart_display(callback)
@@ -159,7 +159,7 @@ async def back_to_cart(callback: CallbackQuery):
 async def pay_liqpay(callback: CallbackQuery):
     await callback.message.edit_text(
         "🔄 Оплата через LiqPay наразі в розробці.\nСкоро буде доступна!",
-        reply_markup=get_back_to_menu_keyboard()
+        reply_markup=get_back_to_menu_inline()
     )
     await callback.answer()
 
@@ -168,7 +168,7 @@ async def pay_liqpay(callback: CallbackQuery):
 async def pay_wayforpay(callback: CallbackQuery):
     await callback.message.edit_text(
         "🔄 Оплата через WayForPay наразі в розробці.\nСкоро буде доступна!",
-        reply_markup=get_back_to_menu_keyboard()
+        reply_markup=get_back_to_menu_inline()
     )
     await callback.answer()
 
@@ -177,7 +177,7 @@ async def pay_wayforpay(callback: CallbackQuery):
 async def back_to_menu(callback: CallbackQuery):
     await callback.message.edit_text(
         "📂 Головне меню:",
-        reply_markup=get_back_to_menu_keyboard()
+        reply_markup=get_back_to_menu_inline()
     )
     await callback.answer()
 
@@ -190,7 +190,7 @@ async def update_cart_display(callback: CallbackQuery):
         await callback.message.edit_text(
             "🛒 Ваш кошик порожній\n\n"
             "Перейдіть до каталогу, щоб додати товари!",
-            reply_markup=get_back_to_menu_keyboard()
+            reply_markup=get_back_to_menu_inline()
         )
         return
 
@@ -241,12 +241,12 @@ async def send_cart_message(message_or_callback, cart_items):
         if isinstance(message_or_callback, CallbackQuery):
             await message_or_callback.message.edit_text(
                 error_text,
-                reply_markup=get_back_to_menu_keyboard()
+                reply_markup=get_back_to_menu_inline()
             )
         else:
             await message_or_callback.answer(
                 error_text,
-                reply_markup=get_back_to_menu_keyboard()
+                reply_markup=get_back_to_menu_inline()
             )
             # Ігнорування неактивних кнопок
 @router.callback_query(F.data.in_(["payment_header", "order_header", "separator", "separator_main", "cancel_warning"]))
@@ -286,7 +286,7 @@ async def confirm_cancel_order(callback: CallbackQuery):
     await callback.message.edit_text(
         "❌ <b>Замовлення скасовано</b>\n\n"
         "Ваш кошик очищено. Дякуємо за звернення!",
-        reply_markup=get_back_to_menu_keyboard(),
+        reply_markup=get_back_to_menu_inline(),
         parse_mode="HTML"
     )
     await callback.answer("Замовлення скасовано")
@@ -325,7 +325,7 @@ async def confirm_order_with_payment(callback: CallbackQuery):
     
     await callback.message.edit_text(
         success_text,
-        reply_markup=get_back_to_menu_keyboard(),
+        reply_markup=get_back_to_menu_inline(),
         parse_mode="HTML"
     )
     await callback.answer("Замовлення оформлено!")
