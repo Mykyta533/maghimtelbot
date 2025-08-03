@@ -174,14 +174,26 @@ async def pay_wayforpay(callback: CallbackQuery):
 
 
 @router.callback_query(F.data == "back_to_menu")
-async def back_to_menu(callback: CallbackQuery):
-    await callback.message.edit_text(
-        "📂 Головне меню:",
-        reply_markup=get_back_to_menu_inline()
+async def back_to_main_menu(callback: CallbackQuery):
+    # Видаляємо inline повідомлення
+    await callback.message.delete()
+    
+    # Показуємо головне меню з Reply клавіатурою
+    await callback.message.answer(
+        "🏠 <b>Головне меню</b>\n\n"
+        "Оберіть потрібний розділ:",
+        reply_markup=get_main_menu(),
+        parse_mode="HTML"
     )
     await callback.answer()
-
-
+    @router.message(F.text == "🔙 Повернутися в меню")
+async def back_to_menu_text(message: Message):
+    await message.answer(
+        "🏠 <b>Головне меню</b>\n\n"
+        "Оберіть потрібний розділ:",
+        reply_markup=get_main_menu(),
+        parse_mode="HTML"
+    )
 async def update_cart_display(callback: CallbackQuery):
     user_id = callback.from_user.id
     cart_items = get_user_cart(user_id)
