@@ -247,3 +247,101 @@ async def send_cart_message(message_or_callback, cart_items):
                 error_text,
                 reply_markup=get_back_to_menu_keyboard()
             )
+            # Ігнорування неактивних кнопок
+@router.callback_query(F.data.in_(["payment_header", "order_header", "separator", "separator_main", "cancel_warning"]))
+async def ignore_inactive_buttons(callback: CallbackQuery):
+    """Ігноруємо неактивні кнопки"""
+    await callback.answer()
+
+# Оплата готівкою
+@router.callback_query(F.data == "pay_cash")
+async def pay_cash(callback: CallbackQuery):
+    await callback.message.edit_text(
+        "💵 <b>Оплата при отриманні</b>\n\n"
+        "Ви зможете оплатити замовлення готівкою при отриманні товару.\n"
+        "Підготуйте, будь ласка, точну суму або картку для оплати.",
+        reply_markup=get_order_confirmation_keyboard("cash"),
+        parse_mode="HTML"
+    )
+    await callback.answer()
+
+# Скасування замовлення
+@router.callback_query(F.data == "cancel_order")
+async def cancel_order_confirm(callback: CallbackQuery):
+    await callback.message.edit_text(
+        "❌ <b>Скасування замовлення</b>\n\n"
+        "Ви впевнені, що хочете скасувати замовлення?",
+        reply_markup=get_order_cancel_confirmation_keyboard(),
+        parse_mode="HTML"
+    )
+    await callback.answer()
+
+# Підтвердження скасування
+@router.callback_query(F.data == "confirm_cancel_order")
+async def confirm_cancel_order(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    clear_cart(user_id)
+    
+    await callback.message.edit_text(
+        "❌ <b>Замовлення скасовано</b>\n\n"
+        "Ваш кошик очищено. Дякуємо за звернення!",
+        reply_markup=get_back_to_menu_keyboard(),
+        parse_mode="HTML"
+    )
+    await callback.answer("Замовлення скасовано")
+
+# Підтвердження замовлення з різними способами оплати
+@router.callback_query(F.data.startswith("confirm_order_"))
+async def confirm_order_with_payment(callback: CallbackQuery):
+    payment_method = callback.data.split("_", 2)[2]
+    user_id = callback.from_user.id
+    cart_items = get_user_cart(user_id)
+    
+    if not cart_items:
+        await callback.answer("Кошик порожній", show_alert=True)
+        return
+    
+    total = get_cart_total(user_id)
+    
+    # Тут можете додати логіку збереження замовлення в базу даних
+    order_id = f"#{user_id}_{len(str(user_id))}{len(cart_items)}"
+    
+    payment_text = {
+        "cash": "💵 При отриманні",
+        "liqpay": "💳 LiqPay", 
+        "wayforpay": "💰 WayForPay"
+    }
+    
+    success_text = (
+        f"✅ <b>Замовлення {order_id} успішно оформлено!</b>\n\n"
+        f"💳 Спосіб оплати: {payment_text.get(payment_method, 'Невідомий')}\n"
+        f"💰 Сума: {total} грн\n\n"
+        "Ми зв'яжемося з вами найближчим часом для підтвердження деталей."
+    )
+    
+    # Очищуємо кошик після успішного замовлення
+    clear_cart(user_id)
+    
+    await callback.message.edit_text(
+        success_text,
+        reply_markup=get_back_to_menu_keyboard(),
+        parse_mode="HTML"
+    )
+    await callback.answer("Замовлення оформлено!")
+
+# Інформація про товар (якщо потрібна)
+@router.callback_query(F.data.startswith("product_info_"))
+async def show_product_info(callback: CallbackQuery):
+    try:
+        product_id = int(callback.data.split("_")[2])
+        product = get_product_by_id(product_id)
+        
+        if product:
+            await callback.answer(
+                f"📦 {product['name']}\n💰 Ціна: {product['price']} грн",
+                show_alert=True
+            )
+        else:
+            await callback.answer("Товар не знайдено", show_alert=True)
+    except (ValueError, IndexError):
+        await callback.answer("Помилка отримання інформації", show_alert=True)
