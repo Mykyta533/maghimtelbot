@@ -2,9 +2,8 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
-from keyboards.cart_keyboards import get_cart_keyboard, get_checkout_keyboard
-from keyboards.main_keyboards import get_back_to_menu_inline, get_main_menu  # Додали get_back_to_menu_inline
 from keyboards.cart_keyboards import get_cart_keyboard, get_checkout_keyboard, get_order_confirmation_keyboard, get_order_cancel_confirmation_keyboard
+from keyboards.main_keyboards import get_back_to_menu_inline, get_main_menu
 from utils.cart import (
     get_user_cart,
     update_cart_item,
@@ -186,7 +185,9 @@ async def back_to_main_menu(callback: CallbackQuery):
         parse_mode="HTML"
     )
     await callback.answer()
-    @router.message(F.text == "🔙 Повернутися в меню")
+
+
+@router.message(F.text == "🔙 Повернутися в меню")
 async def back_to_menu_text(message: Message):
     await message.answer(
         "🏠 <b>Головне меню</b>\n\n"
@@ -194,6 +195,8 @@ async def back_to_menu_text(message: Message):
         reply_markup=get_main_menu(),
         parse_mode="HTML"
     )
+
+
 async def update_cart_display(callback: CallbackQuery):
     user_id = callback.from_user.id
     cart_items = get_user_cart(user_id)
@@ -219,7 +222,7 @@ async def send_cart_message(message_or_callback, cart_items):
             item_total = product['price'] * item['quantity']
             total += item_total
             cart_text += (
-                f"📦 <b>{product['name']}</b>\n"  # Змінено емодзі
+                f"📦 <b>{product['name']}</b>\n"
                 f"💰 {product['price']} грн × {item['quantity']} шт = {item_total} грн\n\n"
             )
         else:
@@ -260,11 +263,14 @@ async def send_cart_message(message_or_callback, cart_items):
                 error_text,
                 reply_markup=get_back_to_menu_inline()
             )
-            # Ігнорування неактивних кнопок
+
+
+# Ігнорування неактивних кнопок
 @router.callback_query(F.data.in_(["payment_header", "order_header", "separator", "separator_main", "cancel_warning"]))
 async def ignore_inactive_buttons(callback: CallbackQuery):
     """Ігноруємо неактивні кнопки"""
     await callback.answer()
+
 
 # Оплата готівкою
 @router.callback_query(F.data == "pay_cash")
@@ -278,6 +284,7 @@ async def pay_cash(callback: CallbackQuery):
     )
     await callback.answer()
 
+
 # Скасування замовлення
 @router.callback_query(F.data == "cancel_order")
 async def cancel_order_confirm(callback: CallbackQuery):
@@ -288,6 +295,7 @@ async def cancel_order_confirm(callback: CallbackQuery):
         parse_mode="HTML"
     )
     await callback.answer()
+
 
 # Підтвердження скасування
 @router.callback_query(F.data == "confirm_cancel_order")
@@ -302,6 +310,7 @@ async def confirm_cancel_order(callback: CallbackQuery):
         parse_mode="HTML"
     )
     await callback.answer("Замовлення скасовано")
+
 
 # Підтвердження замовлення з різними способами оплати
 @router.callback_query(F.data.startswith("confirm_order_"))
@@ -341,6 +350,7 @@ async def confirm_order_with_payment(callback: CallbackQuery):
         parse_mode="HTML"
     )
     await callback.answer("Замовлення оформлено!")
+
 
 # Інформація про товар (якщо потрібна)
 @router.callback_query(F.data.startswith("product_info_"))
