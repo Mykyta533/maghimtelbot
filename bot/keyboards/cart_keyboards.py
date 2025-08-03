@@ -48,17 +48,12 @@ def get_cart_keyboard(cart_items: List[Dict[str, int]]) -> InlineKeyboardMarkup:
             # Рядок з кнопками управління кількістю
             row_buttons = []
             
-            # Кнопка зменшення (неактивна якщо кількість = 1)
-            if quantity > 1:
-                row_buttons.append(
-                    InlineKeyboardButton(text="➖", callback_data=f"cart_decrease_{product_id}")
-                )
-            else:
-                row_buttons.append(
-                    InlineKeyboardButton(text="🚫", callback_data=f"cart_min_{product_id}")
-                )
+            # Кнопка зменшення
+            row_buttons.append(
+                InlineKeyboardButton(text="➖", callback_data=f"cart_decrease_{product_id}")
+            )
             
-            # Кнопка з кількістю (можна клікнути для ручного введення)
+            # Кнопка з кількістю
             row_buttons.append(
                 InlineKeyboardButton(
                     text=f"{quantity} шт", 
@@ -66,15 +61,10 @@ def get_cart_keyboard(cart_items: List[Dict[str, int]]) -> InlineKeyboardMarkup:
                 )
             )
             
-            # Кнопка збільшення (неактивна якщо кількість = 99)
-            if quantity < 99:
-                row_buttons.append(
-                    InlineKeyboardButton(text="➕", callback_data=f"cart_increase_{product_id}")
-                )
-            else:
-                row_buttons.append(
-                    InlineKeyboardButton(text="🚫", callback_data=f"cart_max_{product_id}")
-                )
+            # Кнопка збільшення
+            row_buttons.append(
+                InlineKeyboardButton(text="➕", callback_data=f"cart_increase_{product_id}")
+            )
             
             # Кнопка видалення
             row_buttons.append(
@@ -82,21 +72,11 @@ def get_cart_keyboard(cart_items: List[Dict[str, int]]) -> InlineKeyboardMarkup:
             )
             
             keyboard.append(row_buttons)
-            
-            # Додаємо порожній рядок для розділення товарів (якщо товарів більше 1)
-            if len(cart_items) > 1:
-                keyboard.append([
-                    InlineKeyboardButton(text="━━━━━━━━━━", callback_data="separator")
-                ])
                 
         except (KeyError, TypeError, ValueError) as e:
             # Логуємо помилку та пропускаємо некоректний товар
             print(f"Помилка обробки товару в кошику: {e}")
             continue
-    
-    # Видаляємо останній розділювач якщо він є
-    if keyboard and keyboard[-1][0].text == "━━━━━━━━━━":
-        keyboard.pop()
     
     # Додаємо розділювач перед кнопками дій
     keyboard.append([
@@ -110,8 +90,7 @@ def get_cart_keyboard(cart_items: List[Dict[str, int]]) -> InlineKeyboardMarkup:
     
     # Рядок з додатковими діями
     keyboard.append([
-        InlineKeyboardButton(text="🗑 Очистити кошик", callback_data="clear_cart"),
-        InlineKeyboardButton(text="🛍 Продовжити покупки", callback_data="continue_shopping")
+        InlineKeyboardButton(text="🗑 Очистити кошик", callback_data="clear_cart")
     ])
     
     # Кнопка повернення до меню
@@ -138,9 +117,7 @@ def get_checkout_keyboard() -> InlineKeyboardMarkup:
         ],
         # Способи оплати
         [
-            InlineKeyboardButton(text="💳 LiqPay", callback_data="pay_liqpay")
-        ],
-        [
+            InlineKeyboardButton(text="💳 LiqPay", callback_data="pay_liqpay"),
             InlineKeyboardButton(text="💰 WayForPay", callback_data="pay_wayforpay")
         ],
         [
@@ -160,84 +137,51 @@ def get_checkout_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
-def get_payment_confirmation_keyboard(payment_method: str) -> InlineKeyboardMarkup:
+def get_order_confirmation_keyboard(payment_method: Optional[str] = None) -> InlineKeyboardMarkup:
     """
-    Клавіатура для підтвердження оплати
-    :param payment_method: спосіб оплати
-    :return: клавіатура з кнопками підтвердження
+    Клавіатура підтвердження замовлення
+    :param payment_method: обраний спосіб оплати
     """
-    keyboard: List[List[InlineKeyboardButton]] = [
+    keyboard = [
+        # Заголовок
         [
-            InlineKeyboardButton(text="✅ Підтвердити замовлення", callback_data=f"confirm_order_{payment_method}")
+            InlineKeyboardButton(text="📋 Підтвердження замовлення", callback_data="order_header")
         ],
+        # Розділювач
         [
-            InlineKeyboardButton(text="✏️ Змінити спосіб оплати", callback_data="checkout"),
-            InlineKeyboardButton(text="🔙 До кошика", callback_data="back_to_cart")
-        ]
-    ]
-    
-    return InlineKeyboardMarkup(inline_keyboard=keyboard)
-
-
-def get_empty_cart_keyboard() -> InlineKeyboardMarkup:
-    """
-    Клавіатура для порожнього кошика
-    :return: клавіатура з кнопкою переходу до каталогу
-    """
-    keyboard: List[List[InlineKeyboardButton]] = [
-        [
-            InlineKeyboardButton(text="🛍 Перейти до каталогу", callback_data="show_catalog")
+            InlineKeyboardButton(text="═════════════", callback_data="separator")
         ],
+        # Основна кнопка підтвердження
         [
-            InlineKeyboardButton(text="🏠 Головне меню", callback_data="back_to_menu")
-        ]
-    ]
-    
-    return InlineKeyboardMarkup(inline_keyboard=keyboard)
-
-
-def get_quantity_input_keyboard(product_id: int, current_quantity: int) -> InlineKeyboardMarkup:
-    """
-    Клавіатура для швидкого вибору кількості товару
-    :param product_id: ID товару
-    :param current_quantity: поточна кількість
-    :return: клавіатура з кнопками швидкого вибору
-    """
-    keyboard: List[List[InlineKeyboardButton]] = []
-    
-    # Заголовок
-    keyboard.append([
-        InlineKeyboardButton(
-            text=f"Поточна кількість: {current_quantity} шт", 
-            callback_data="current_quantity"
-        )
-    ])
-    
-    # Швидкий вибір кількості
-    quick_amounts = [1, 2, 3, 5, 10]
-    row = []
-    
-    for amount in quick_amounts:
-        if amount != current_quantity:  # Не показуємо поточну кількість
-            row.append(
-                InlineKeyboardButton(
-                    text=f"{amount}", 
-                    callback_data=f"set_quantity_{product_id}_{amount}"
-                )
+            InlineKeyboardButton(
+                text="✅ Підтвердити замовлення", 
+                callback_data=f"confirm_order_{payment_method}" if payment_method else "confirm_order"
             )
-            
-            # По 3 кнопки в рядку
-            if len(row) == 3:
-                keyboard.append(row)
-                row = []
+        ],
+        # Кнопки редагування
+        [
+            InlineKeyboardButton(text="💳 Змінити оплату", callback_data="checkout")
+        ],
+        # Кнопки навігації
+        [
+            InlineKeyboardButton(text="🔙 Назад до кошика", callback_data="back_to_cart"),
+            InlineKeyboardButton(text="❌ Скасувати замовлення", callback_data="cancel_order")
+        ]
+    ]
     
-    # Додаємо останній рядок якщо є залишкові кнопки
-    if row:
-        keyboard.append(row)
-    
-    # Кнопки управління
-    keyboard.append([
-        InlineKeyboardButton(text="🔙 Назад до кошика", callback_data="back_to_cart")
-    ])
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_order_cancel_confirmation_keyboard() -> InlineKeyboardMarkup:
+    """Клавіатура підтвердження скасування замовлення"""
+    keyboard = [
+        [
+            InlineKeyboardButton(text="⚠️ Ви впевнені?", callback_data="cancel_warning")
+        ],
+        [
+            InlineKeyboardButton(text="✅ Так, скасувати", callback_data="confirm_cancel_order"),
+            InlineKeyboardButton(text="❌ Ні, повернутися", callback_data="back_to_cart")
+        ]
+    ]
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
