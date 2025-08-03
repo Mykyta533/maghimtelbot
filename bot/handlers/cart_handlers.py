@@ -3,7 +3,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
 from keyboards.cart_keyboards import get_cart_keyboard, get_checkout_keyboard
-from keyboards.main_keyboards import get_back_to_menu_keyboard
+from keyboards.main_keyboards import get_back_to_menu_inline, get_main_menu  # Додали get_back_to_menu_inline
 from keyboards.cart_keyboards import get_cart_keyboard, get_checkout_keyboard, get_order_confirmation_keyboard, get_order_cancel_confirmation_keyboard
 from utils.cart import (
     get_user_cart,
