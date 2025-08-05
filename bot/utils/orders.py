@@ -32,6 +32,8 @@ def create_order(user_id: int, phone: str, address: str, total: float, payment_m
         orders_data[user_key].append(order)
         save_data(ORDERS_FILE, orders_data)
         
+        print(f"✅ Замовлення #{order_id} створено успішно для користувача {user_id}")
+        
         # Оновлюємо статистику користувача
         user_data = get_user_data(user_id)
         update_user_data(user_id, {
@@ -41,7 +43,10 @@ def create_order(user_id: int, phone: str, address: str, total: float, payment_m
         
         return order_id
         
-    except Exception:
+    except Exception as e:
+        print(f"❌ Помилка створення замовлення: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 def get_user_orders(user_id: int) -> List[Dict]:

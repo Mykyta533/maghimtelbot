@@ -13,6 +13,7 @@ from utils.cart import (
 )
 from utils.catalog import get_product_by_id
 from utils.orders import create_order, process_payment
+import os
 
 router = Router()
 
@@ -378,8 +379,19 @@ async def confirm_order_with_payment(callback: CallbackQuery):
     
     total = get_cart_total(user_id)
     
-    # Тут можете додати логіку збереження замовлення в базу даних
-    order_id = f"#{user_id}_{len(str(user_id))}{len(cart_items)}"
+    # Створюємо замовлення через функцію create_order
+    from datetime import datetime
+    order_id = create_order(
+        user_id=user_id,
+        phone="Не вказано",  # Тимчасово, поки не додамо форму
+        address="Самовивіз",  # Тимчасово
+        total=total,
+        payment_method=payment_method
+    )
+    
+    if not order_id:
+        await callback.answer("Помилка створення замовлення", show_alert=True)
+        return
     
     payment_text = {
         "cash": "💵 При отриманні",
@@ -387,11 +399,42 @@ async def confirm_order_with_payment(callback: CallbackQuery):
         "wayforpay": "💰 WayForPay"
     }
     
+    # Повідомлення адміну про нове замовлення
+    admin_id = int(os.getenv('ADMIN_ID', '8095681158'))
+    
+    # Формуємо детальну інформацію про товари
+    items_text = ""
+    for item in cart_items:
+        product = get_product_by_id(item['product_id'])
+        if product:
+            item_total = product['price'] * item['quantity']
+            items_text += f"• {product['name']} - {item['quantity']} шт × {product['price']} грн = {item_total} грн\n"
+    
+    admin_text = (
+        "🔔 <b>Нове замовлення через швидке оформлення!</b>\n\n"
+        f"📋 Замовлення: #{order_id}\n"
+        f"👤 Користувач: {callback.from_user.first_name or 'Невідомо'} {callback.from_user.last_name or ''}\n"
+        f"📱 Username: @{callback.from_user.username or 'немає'}\n"
+        f"🆔 ID: {user_id}\n"
+        f"🛒 Товари:\n{items_text}\n"
+        f"💰 Оплата: {payment_text.get(payment_method, 'Невідомий')}\n"
+        f"💳 Сума: {total} грн\n\n"
+        f"⚠️ <b>Увага:</b> Потрібно зв'язатися з клієнтом для уточнення контактів та адреси!"
+    )
+    
+    try:
+        await callback.bot.send_message(chat_id=admin_id, text=admin_text, parse_mode="HTML")
+        print(f"✅ Повідомлення адміну надіслано успішно (ID: {admin_id})")
+    except Exception as e:
+        print(f"❌ Не вдалося надіслати повідомлення адміну (ID: {admin_id}): {e}")
+        import traceback
+        traceback.print_exc()
+    
     success_text = (
         f"✅ <b>Замовлення {order_id} успішно оформлено!</b>\n\n"
         f"💳 Спосіб оплати: {payment_text.get(payment_method, 'Невідомий')}\n"
         f"💰 Сума: {total} грн\n\n"
-        "Ми зв'яжемося з вами найближчим часом для підтвердження деталей."
+        "🔔 Ми зв'яжемося з вами найближчим часом для підтвердження деталей та уточнення адреси доставки."
     )
     
     # Очищуємо кошик після успішного замовлення

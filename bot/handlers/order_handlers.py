@@ -6,7 +6,9 @@ from aiogram.filters import StateFilter
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 
 from utils.cart import get_user_cart, get_cart_total, clear_cart
-from utils.orders import create_order  # <-- переконайся, що цей модуль існує
+from utils.orders import create_order
+from utils.catalog import get_product_by_id
+import os
 
 router = Router()
 
@@ -77,21 +79,36 @@ async def confirm_order(message: Message, state: FSMContext):
     )
 
     # Повідомлення адміну
-    admin_id = 8095681158  # 🔁 Вкажи свій Telegram ID або ID групи
+    admin_id = int(os.getenv('ADMIN_ID', '8095681158'))
+    
+    # Формуємо детальну інформацію про товари
+    items_text = ""
+    for item in cart_items:
+        product = get_product_by_id(item['product_id'])
+        if product:
+            item_total = product['price'] * item['quantity']
+            items_text += f"• {product['name']} - {item['quantity']} шт × {product['price']} грн = {item_total} грн\n"
+    
     admin_text = (
         "🔔 <b>Нове замовлення!</b>\n\n"
         f"📋 Замовлення: #{order_id}\n"
-        f"👤 Користувач: @{message.from_user.username or 'без username'}\n"
+        f"👤 Користувач: {message.from_user.first_name or 'Невідомо'} {message.from_user.last_name or ''}\n"
+        f"📱 Username: @{message.from_user.username or 'немає'}\n"
         f"🆔 ID: {user_id}\n"
         f"📞 Телефон: {phone}\n"
         f"📍 Адреса: {address}\n"
+        f"🛒 Товари:\n{items_text}\n"
         f"💰 Оплата: {payment_method}\n"
         f"💳 Сума: {total} грн"
     )
 
     try:
         await message.bot.send_message(chat_id=admin_id, text=admin_text, parse_mode="HTML")
+        print(f"✅ Повідомлення адміну надіслано успішно (ID: {admin_id})")
     except Exception as e:
-        print(f"❌ Не вдалося надіслати повідомлення адміну: {e}")
+        print(f"❌ Не вдалося надіслати повідомлення адміну (ID: {admin_id}): {e}")
+        # Логуємо детальну помилку
+        import traceback
+        traceback.print_exc()
 
     await state.clear()

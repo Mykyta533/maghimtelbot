@@ -63,14 +63,20 @@ def update_user_data(user_id: int, data: Dict):
 
 def get_next_order_id() -> int:
     """Отримання наступного ID замовлення"""
-    orders = load_data(ORDERS_FILE)
-    if not orders:
+    try:
+        orders = load_data(ORDERS_FILE)
+        if not orders:
+            return 1
+        
+        max_id = 0
+        for order_data in orders.values():
+            if isinstance(order_data, list):
+                for order in order_data:
+                    if isinstance(order, dict) and 'id' in order:
+                        if order['id'] > max_id:
+                            max_id = order['id']
+        
+        return max_id + 1
+    except Exception as e:
+        print(f"❌ Помилка отримання ID замовлення: {e}")
         return 1
-    
-    max_id = 0
-    for order_data in orders.values():
-        for order in order_data:
-            if order['id'] > max_id:
-                max_id = order['id']
-    
-    return max_id + 1
