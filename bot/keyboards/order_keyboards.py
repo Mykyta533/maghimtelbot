@@ -5,14 +5,6 @@ from typing import List, Optional
 def get_payment_keyboard() -> InlineKeyboardMarkup:
     """Клавіатура способів оплати"""
     keyboard = [
-        # Заголовок
-        [
-            InlineKeyboardButton(text="💳 Оберіть спосіб оплати:", callback_data="payment_header")
-        ],
-        # Розділювач
-        [
-            InlineKeyboardButton(text="═════════════", callback_data="separator")
-        ],
         # Електронні платіжні системи
         [
             InlineKeyboardButton(text="💳 LiqPay", callback_data="pay_liqpay"),
@@ -23,15 +15,8 @@ def get_payment_keyboard() -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="💵 При отриманні", callback_data="pay_cash"),
             InlineKeyboardButton(text="🏦 Переказ на карту", callback_data="pay_card_transfer")
         ],
-        # Розділювач
-        [
-            InlineKeyboardButton(text="═════════════", callback_data="separator")
-        ],
         # Навігація
         [
-            InlineKeyboardButton(text="🔙 Назад до кошика", callback_data="back_to_cart"),
-            InlineKeyboardButton(text="🏠 Головне меню", callback_data="back_to_menu")
-        ]
     ]
     
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
@@ -43,14 +28,6 @@ def get_order_confirmation_keyboard(payment_method: Optional[str] = None) -> Inl
     :param payment_method: обраний спосіб оплати
     """
     keyboard = [
-        # Заголовок
-        [
-            InlineKeyboardButton(text="📋 Підтвердження замовлення", callback_data="order_header")
-        ],
-        # Розділювач
-        [
-            InlineKeyboardButton(text="═════════════", callback_data="separator")
-        ],
         # Основна кнопка підтвердження
         [
             InlineKeyboardButton(
@@ -134,9 +111,6 @@ def get_payment_method_keyboard(current_method: str) -> InlineKeyboardMarkup:
     
     # Навігація
     keyboard.extend([
-        [
-            InlineKeyboardButton(text="═════════════", callback_data="separator")
-        ],
         [
             InlineKeyboardButton(text="🔙 Назад до підтвердження", callback_data="back_to_confirmation")
         ]

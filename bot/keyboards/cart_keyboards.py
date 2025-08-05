@@ -80,7 +80,7 @@ def get_cart_keyboard(cart_items: List[Dict[str, int]]) -> InlineKeyboardMarkup:
     
     # Додаємо розділювач перед кнопками дій
     keyboard.append([
-        InlineKeyboardButton(text="═════════════", callback_data="separator_main")
+        InlineKeyboardButton(text="━━━━━━━━━━━━━", callback_data="separator_main")
     ])
     
     # Кнопка оформлення замовлення
@@ -107,14 +107,6 @@ def get_checkout_keyboard() -> InlineKeyboardMarkup:
     :return: клавіатура з варіантами оплати і кнопкою назад
     """
     keyboard: List[List[InlineKeyboardButton]] = [
-        # Заголовок
-        [
-            InlineKeyboardButton(text="💳 Оберіть спосіб оплати:", callback_data="payment_header")
-        ],
-        # Розділювач
-        [
-            InlineKeyboardButton(text="═════════════", callback_data="separator")
-        ],
         # Способи оплати
         [
             InlineKeyboardButton(text="💳 LiqPay", callback_data="pay_liqpay"),
@@ -122,10 +114,6 @@ def get_checkout_keyboard() -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(text="💵 При отриманні", callback_data="pay_cash")
-        ],
-        # Розділювач
-        [
-            InlineKeyboardButton(text="═════════════", callback_data="separator")
         ],
         # Навігаційні кнопки
         [
@@ -143,14 +131,6 @@ def get_order_confirmation_keyboard(payment_method: Optional[str] = None) -> Inl
     :param payment_method: обраний спосіб оплати
     """
     keyboard = [
-        # Заголовок
-        [
-            InlineKeyboardButton(text="📋 Підтвердження замовлення", callback_data="order_header")
-        ],
-        # Розділювач
-        [
-            InlineKeyboardButton(text="═════════════", callback_data="separator")
-        ],
         # Основна кнопка підтвердження
         [
             InlineKeyboardButton(

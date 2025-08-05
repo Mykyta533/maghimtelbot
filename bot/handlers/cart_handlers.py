@@ -268,7 +268,7 @@ async def send_cart_message(message_or_callback, cart_items):
 
 
 # Ігнорування неактивних кнопок
-@router.callback_query(F.data.in_(["payment_header", "order_header", "separator", "separator_main", "cancel_warning"]))
+@router.callback_query(F.data.in_(["separator_main", "cancel_warning"]))
 async def ignore_inactive_buttons(callback: CallbackQuery):
     """Ігноруємо неактивні кнопки"""
     await callback.answer()
