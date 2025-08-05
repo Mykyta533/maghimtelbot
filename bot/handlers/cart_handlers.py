@@ -12,6 +12,7 @@ from utils.cart import (
     get_cart_total
 )
 from utils.catalog import get_product_by_id
+from utils.orders import create_order, process_payment
 
 router = Router()
 
@@ -269,6 +270,58 @@ async def send_cart_message(message_or_callback, cart_items):
 @router.callback_query(F.data.in_(["payment_header", "order_header", "separator", "separator_main", "cancel_warning"]))
 async def ignore_inactive_buttons(callback: CallbackQuery):
     """Ігноруємо неактивні кнопки"""
+    await callback.answer()
+
+
+# Обробник для кнопки "Замовити зараз" (різні варіанти назв)
+@router.callback_query(F.data.in_(["order_now", "make_order", "place_order", "checkout_now"]))
+async def order_now_handler(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    cart_items = get_user_cart(user_id)
+
+    if not cart_items:
+        await callback.answer("Кошик порожній", show_alert=True)
+        return
+
+    total = get_cart_total(user_id)
+
+    checkout_text = (
+        "📋 <b>Оформлення замовлення</b>\n\n"
+        f"💳 Сума до оплати: <b>{total} грн</b>\n\n"
+        "Оберіть спосіб оплати:"
+    )
+
+    await callback.message.edit_text(
+        checkout_text,
+        reply_markup=get_checkout_keyboard(),
+        parse_mode="HTML"
+    )
+    await callback.answer()
+
+
+# Обробник для кнопки "Замовити зараз"
+@router.callback_query(F.data == "order_now")
+async def order_now(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    cart_items = get_user_cart(user_id)
+
+    if not cart_items:
+        await callback.answer("Кошик порожній", show_alert=True)
+        return
+
+    total = get_cart_total(user_id)
+
+    checkout_text = (
+        "📋 <b>Оформлення замовлення</b>\n\n"
+        f"💳 Сума до оплати: <b>{total} грн</b>\n\n"
+        "Оберіть спосіб оплати:"
+    )
+
+    await callback.message.edit_text(
+        checkout_text,
+        reply_markup=get_checkout_keyboard(),
+        parse_mode="HTML"
+    )
     await callback.answer()
 
 
