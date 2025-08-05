@@ -77,7 +77,7 @@ async def confirm_order(message: Message, state: FSMContext):
     )
 
     # Повідомлення адміну
-    admin_id = 7888882860  # 🔁 Вкажи свій Telegram ID або ID групи
+    admin_id = 8095681158  # 🔁 Вкажи свій Telegram ID або ID групи
     admin_text = (
         "🔔 <b>Нове замовлення!</b>\n\n"
         f"📋 Замовлення: #{order_id}\n"
