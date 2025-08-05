@@ -6,7 +6,7 @@ from aiogram.filters import StateFilter
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 
 from utils.cart import get_user_cart, get_cart_total, clear_cart
-from utils.order import create_order  # <-- переконайся, що цей модуль існує
+from utils.orders import create_order  # <-- переконайся, що цей модуль існує
 
 router = Router()
 
