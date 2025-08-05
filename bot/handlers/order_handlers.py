@@ -1,13 +1,12 @@
 from aiogram import Router, F
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import Message
 from aiogram.filters import StateFilter
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 
 from utils.cart import get_user_cart, get_cart_total, clear_cart
-from utils.order_storage import save_order_to_json
+from utils.order import create_order  # <-- переконайся, що цей модуль існує
 
 router = Router()
 
@@ -42,41 +41,50 @@ async def get_address(message: Message, state: FSMContext):
 
 @router.message(StateFilter(CheckoutState.waiting_for_payment_method))
 async def confirm_order(message: Message, state: FSMContext):
-    payment_method = message.text
     user_id = message.from_user.id
+    payment_method = message.text
     cart_items = get_user_cart(user_id)
     total = get_cart_total(user_id)
 
-    data = await state.get_data()
-    data.update({
-        "payment_method": payment_method,
-        "cart": cart_items,
-        "total": total,
-        "user_id": user_id
-    })
+    if not cart_items:
+        await message.answer("🛒 Ваш кошик порожній. Додайте товари перед оформленням замовлення.")
+        await state.clear()
+        return
 
-    order_id = save_order_to_json(data)
+    data = await state.get_data()
+    phone = data.get("phone")
+    address = data.get("address")
+
+    # Зберігаємо замовлення
+    order_id = create_order(
+        user_id=user_id,
+        phone=phone,
+        address=address,
+        total=total,
+        payment_method=payment_method
+    )
+
     clear_cart(user_id)
 
     # Повідомлення клієнту
     await message.answer(
         f"✅ Замовлення #{order_id} прийнято!\n"
-        f"📞 Телефон: {data['phone']}\n"
-        f"📍 Адреса: {data['address']}\n"
+        f"📞 Телефон: {phone}\n"
+        f"📍 Адреса: {address}\n"
         f"💰 Оплата: {payment_method}\n"
         f"💳 Сума: {total} грн",
         reply_markup=ReplyKeyboardRemove()
     )
 
     # Повідомлення адміну
-    admin_id = 7888882860  # ← Встав сюди свій Telegram ID
+    admin_id = 7888882860  # 🔁 Вкажи свій Telegram ID або ID групи
     admin_text = (
         "🔔 <b>Нове замовлення!</b>\n\n"
         f"📋 Замовлення: #{order_id}\n"
         f"👤 Користувач: @{message.from_user.username or 'без username'}\n"
         f"🆔 ID: {user_id}\n"
-        f"📞 Телефон: {data['phone']}\n"
-        f"📍 Адреса: {data['address']}\n"
+        f"📞 Телефон: {phone}\n"
+        f"📍 Адреса: {address}\n"
         f"💰 Оплата: {payment_method}\n"
         f"💳 Сума: {total} грн"
     )
