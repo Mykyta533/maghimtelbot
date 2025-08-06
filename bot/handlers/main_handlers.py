@@ -4,7 +4,7 @@ from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 
 from keyboards.main_keyboards import get_main_menu, get_back_to_menu_keyboard
-from utils.messages import WELCOME_MESSAGE, SHOP_ADDRESS, CONTACT_INFO
+from utils.messages import WELCOME_MESSAGE, CONTACT_INFO
 from utils.cart import get_user_cart, get_cart_total
 from keyboards.cart_keyboards import get_checkout_keyboard
 
@@ -30,17 +30,9 @@ async def back_to_menu(message: Message, state: FSMContext):
         reply_markup=get_main_menu()
     )
 
-@router.message(F.text == "📍 Адреса магазину")
-async def shop_address(message: Message):
-    """Показ адреси магазину"""
-    await message.answer(
-        SHOP_ADDRESS,
-        reply_markup=get_back_to_menu_keyboard()
-    )
-
-@router.message(F.text == "📞 Зв'язатися")
+@router.message(F.text == "📞 Контакти")
 async def contact_info(message: Message):
-    """Контактна інформація"""
+    """Повна контактна інформація"""
     await message.answer(
         CONTACT_INFO,
         reply_markup=get_back_to_menu_keyboard()

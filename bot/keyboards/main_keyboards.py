@@ -22,8 +22,7 @@ def get_main_menu():
                 KeyboardButton(text="🧧 Відмова від паперового чека")
             ],
             [
-                KeyboardButton(text="📍 Адреса магазину"),
-                KeyboardButton(text="📞 Зв'язатися")
+                KeyboardButton(text="📞 Контакти")
             ]
         ],
         resize_keyboard=True,
