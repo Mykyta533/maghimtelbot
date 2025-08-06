@@ -78,11 +78,6 @@ def get_cart_keyboard(cart_items: List[Dict[str, int]]) -> InlineKeyboardMarkup:
             print(f"Помилка обробки товару в кошику: {e}")
             continue
     
-    # Додаємо розділювач перед кнопками дій
-    keyboard.append([
-        InlineKeyboardButton(text="━━━━━━━━━━━━━", callback_data="separator_main")
-    ])
-    
     # Кнопка оформлення замовлення
     keyboard.append([
         InlineKeyboardButton(text="🧾 Оформити замовлення", callback_data="checkout")
