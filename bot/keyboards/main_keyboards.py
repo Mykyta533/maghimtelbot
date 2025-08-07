@@ -11,11 +11,11 @@ def get_main_menu():
             ],
             [
                 KeyboardButton(text="🛒 Кошик"),
-                KeyboardButton(text="🧾 Замовити")
+                KeyboardButton(text="👤 Моє")
             ],
             [
-                KeyboardButton(text="🤖 AI-помічник (текстовий)"),
-                KeyboardButton(text="🎙 AI-помічник (голосовий)")
+                KeyboardButton(text="🤖 AI-помічник"),
+                KeyboardButton(text="🧾 Швидке замовлення")
             ],
             [
                 KeyboardButton(text="🧮 Мої чеки"),

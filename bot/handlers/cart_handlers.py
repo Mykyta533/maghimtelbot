@@ -379,12 +379,19 @@ async def confirm_order_with_payment(callback: CallbackQuery):
     
     total = get_cart_total(user_id)
     
+    # Отримуємо дані користувача
+    from utils.database import get_user_data
+    user_data = get_user_data(user_id)
+    user_phone = user_data.get('phone', 'Не вказано')
+    user_name = user_data.get('name', 'Не вказано')
+    user_address = user_data.get('address', 'Не вказано')
+    
     # Створюємо замовлення через функцію create_order
     from datetime import datetime
     order_id = create_order(
         user_id=user_id,
-        phone="Не вказано",  # Тимчасово, поки не додамо форму
-        address="Самовивіз",  # Тимчасово
+        phone=user_phone,
+        address=user_address,
         total=total,
         payment_method=payment_method
     )
@@ -414,12 +421,14 @@ async def confirm_order_with_payment(callback: CallbackQuery):
         "🔔 <b>Нове замовлення через швидке оформлення!</b>\n\n"
         f"📋 Замовлення: #{order_id}\n"
         f"👤 Користувач: {callback.from_user.first_name or 'Невідомо'} {callback.from_user.last_name or ''}\n"
+        f"👤 Ім'я клієнта: {user_name}\n"
         f"📱 Username: @{callback.from_user.username or 'немає'}\n"
         f"🆔 ID: {user_id}\n"
+        f"📞 Телефон: {user_phone}\n"
+        f"📍 Адреса доставки: {user_address}\n"
         f"🛒 Товари:\n{items_text}\n"
         f"💰 Оплата: {payment_text.get(payment_method, 'Невідомий')}\n"
-        f"💳 Сума: {total} грн\n\n"
-        f"⚠️ <b>Увага:</b> Потрібно зв'язатися з клієнтом для уточнення контактів та адреси!"
+        f"💳 Сума: {total} грн"
     )
     
     try:
@@ -432,9 +441,12 @@ async def confirm_order_with_payment(callback: CallbackQuery):
     
     success_text = (
         f"✅ <b>Замовлення {order_id} успішно оформлено!</b>\n\n"
+        f"👤 Ім'я: {user_name}\n"
+        f"📞 Телефон: {user_phone}\n"
+        f"📍 Адреса: {user_address}\n"
         f"💳 Спосіб оплати: {payment_text.get(payment_method, 'Невідомий')}\n"
         f"💰 Сума: {total} грн\n\n"
-        "🔔 Ми зв'яжемося з вами найближчим часом для підтвердження деталей та уточнення адреси доставки."
+        "🔔 Ми зв'яжемося з вами найближчим часом для підтвердження замовлення!"
     )
     
     # Очищуємо кошик після успішного замовлення

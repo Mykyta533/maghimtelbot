@@ -71,6 +71,7 @@ async def confirm_order(message: Message, state: FSMContext):
     # Повідомлення клієнту
     await message.answer(
         f"✅ Замовлення #{order_id} прийнято!\n"
+        f"👤 Ім'я: {message.from_user.first_name or 'Невідомо'} {message.from_user.last_name or ''}\n"
         f"📞 Телефон: {phone}\n"
         f"📍 Адреса: {address}\n"
         f"💰 Оплата: {payment_method}\n"
