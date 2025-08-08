@@ -15,7 +15,7 @@ def get_main_menu():
             ],
             [
                 KeyboardButton(text="🤖 AI-помічник"),
-                KeyboardButton(text="🧾 Швидке замовлення")
+                KeyboardButton(text="💳 QR карта")
             ],
             [
                 KeyboardButton(text="🧮 Мої чеки"),

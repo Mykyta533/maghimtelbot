@@ -130,6 +130,75 @@ async def add_product_to_cart(callback: CallbackQuery):
         logger.error(f"Error adding to cart: {e}")
         await callback.answer("❌ Помилка при додаванні до кошика", show_alert=True)
 
+@router.callback_query(F.data.startswith("order_now_"))
+async def order_now_from_catalog(callback: CallbackQuery):
+    """Швидке замовлення товару з каталогу"""
+    try:
+        product_id = int(callback.data.split("_")[-1])
+    except (ValueError, IndexError):
+        await callback.answer("❌ Невірний ID товару", show_alert=True)
+        return
+
+    try:
+        user_id = callback.from_user.id
+        product = get_product_by_id(product_id)
+
+        if not product:
+            await callback.answer("Товар не знайдено", show_alert=True)
+            return
+
+        if product.get('stock', 0) <= 0:
+            await callback.answer("❌ Товар закінчився", show_alert=True)
+            return
+
+        # Додаємо товар до кошика
+        from utils.cart import add_to_cart, get_cart_total
+        success = add_to_cart(user_id, product_id, 1)
+
+        if not success:
+            await callback.answer("❌ Помилка при додаванні до кошика", show_alert=True)
+            return
+
+        # Перевіряємо чи є дані користувача
+        from utils.database import get_user_data
+        user_data = get_user_data(user_id)
+        
+        if not user_data.get('phone') or not user_data.get('name') or not user_data.get('address'):
+            await callback.message.edit_text(
+                "⚠️ <b>Заповніть профіль</b>\n\n"
+                "Для швидкого замовлення спочатку заповніть ваші дані в розділі \"👤 Моє\".",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
+                    InlineKeyboardButton(text="👤 Заповнити профіль", callback_data="fill_profile"),
+                    InlineKeyboardButton(text="🔙 Назад", callback_data=f"product_{product_id}")
+                ]]),
+                parse_mode="HTML"
+            )
+            return
+
+        total = get_cart_total(user_id)
+        
+        from keyboards.cart_keyboards import get_checkout_keyboard
+        checkout_text = (
+            f"📋 <b>Швидке замовлення товару</b>\n\n"
+            f"📦 Товар: {product['name']}\n"
+            f"👤 Ім'я: {user_data.get('name')}\n"
+            f"📞 Телефон: {user_data.get('phone')}\n"
+            f"📍 Адреса: {user_data.get('address')}\n\n"
+            f"💳 Сума до оплати: <b>{total} грн</b>\n\n"
+            "Оберіть спосіб оплати:"
+        )
+        
+        await callback.message.edit_text(
+            checkout_text,
+            reply_markup=get_checkout_keyboard(),
+            parse_mode="HTML"
+        )
+        await callback.answer("✅ Товар додано до кошика!")
+
+    except Exception as e:
+        logger.error(f"Error in order now: {e}")
+        await callback.answer("❌ Помилка при оформленні замовлення", show_alert=True)
+
 @router.callback_query(F.data == "back_to_catalog")
 async def back_to_catalog(callback: CallbackQuery):
     try:
