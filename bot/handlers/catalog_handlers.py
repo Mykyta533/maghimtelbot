@@ -98,11 +98,15 @@ async def navigate_products(callback: CallbackQuery):
         logger.error(f"Error navigating products: {e}")
         await callback.answer("❌ Помилка навігації", show_alert=True)
 
-@router.callback_query(F.data.startswith("add_to_cart_"))
+@router.callback_query(F.data.startswith("add_cart_"))
 async def add_product_to_cart(callback: CallbackQuery):
     try:
-        # callback_data виглядає як "add_to_cart_5"
-        product_id = int(callback.data.split("_")[-1])
+        # callback_data виглядає як "add_cart_5"
+        parts = callback.data.split("_")
+        if len(parts) >= 2:  # add_cart_X
+            product_id = int(parts[2])
+        else:
+            product_id = int(parts[-1])
     except (ValueError, IndexError):
         await callback.answer("❌ Невірний ID товару", show_alert=True)
         return
@@ -130,11 +134,16 @@ async def add_product_to_cart(callback: CallbackQuery):
         logger.error(f"Error adding to cart: {e}")
         await callback.answer("❌ Помилка при додаванні до кошика", show_alert=True)
 
-@router.callback_query(F.data.startswith("order_now_"))
+@router.callback_query(F.data.startswith("order_"))
 async def order_now_from_catalog(callback: CallbackQuery):
     """Швидке замовлення товару з каталогу"""
     try:
-        product_id = int(callback.data.split("_")[-1])
+        # callback_data виглядає як "order_5"
+        parts = callback.data.split("_")
+        if len(parts) >= 2:  # order_X
+            product_id = int(parts[1])
+        else:
+            product_id = int(parts[-1])
     except (ValueError, IndexError):
         await callback.answer("❌ Невірний ID товару", show_alert=True)
         return

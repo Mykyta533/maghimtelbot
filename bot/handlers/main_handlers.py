@@ -237,16 +237,18 @@ async def qr_card(message: Message):
     from utils.loyalty import get_user_loyalty_points
     loyalty_points = get_user_loyalty_points(user_id)
     
-    # Генеруємо унікальний QR код для користувача
-    qr_code = f"CW{user_id:08d}"
+    # Генеруємо унікальний QR код для користувача у форматі коду
+    import hashlib
+    hash_object = hashlib.md5(str(user_id).encode())
+    hex_dig = hash_object.hexdigest()[:8].upper()
+    qr_code = f"CW-{hex_dig[:4]}-{hex_dig[4:]}"
     
     from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
     
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="🎟 Мої купони", callback_data="my_coupons"),
-                InlineKeyboardButton(text="🎁 Акції", callback_data="show_promotions")
+                InlineKeyboardButton(text="🎟 Мої купони", callback_data="my_coupons")
             ],
             [
                 InlineKeyboardButton(text="📊 Історія балів", callback_data="points_history")
@@ -277,47 +279,15 @@ async def qr_card(message: Message):
         parse_mode="HTML"
     )
 
-@router.callback_query(F.data == "my_coupons")
-async def show_my_coupons(callback: CallbackQuery):
-    """Показати купони користувача"""
-    user_id = callback.from_user.id
+@router.message(F.text == "🎁 Акції")
+async def show_promotions_menu(message: Message):
+    """Показати акції та знижки з можливістю підписки на повідомлення"""
+    user_id = message.from_user.id
+    user_data = get_user_data(user_id)
     
-    # Тут би була логіка отримання купонів користувача
-    # Поки що показуємо доступні купони
+    # Перевіряємо чи підписаний користувач на повідомлення про акції
+    notifications_enabled = user_data.get('promotion_notifications', False)
     
-    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-    
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(text="🎁 Переглянути акції", callback_data="show_promotions")
-            ],
-            [
-                InlineKeyboardButton(text="🔙 Назад до QR карти", callback_data="back_to_qr")
-            ]
-        ]
-    )
-    
-    coupons_text = (
-        "🎟 <b>Ваші купони</b>\n\n"
-        "У вас поки немає активних купонів.\n\n"
-        "💡 <b>Як отримати купони:</b>\n"
-        "• Робіть покупки та накопичуйте бали\n"
-        "• Слідкуйте за акціями в розділі \"🎁 Акції\"\n"
-        "• Підписуйтесь на наші соціальні мережі\n\n"
-        "🎯 Перегляньте поточні акції, щоб не пропустити вигідні пропозиції!"
-    )
-    
-    await callback.message.edit_text(
-        coupons_text,
-        reply_markup=keyboard,
-        parse_mode="HTML"
-    )
-    await callback.answer()
-
-@router.callback_query(F.data == "show_promotions")
-async def show_promotions(callback: CallbackQuery):
-    """Показати акції та знижки"""
     from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
     
     keyboard = InlineKeyboardMarkup(
@@ -326,7 +296,13 @@ async def show_promotions(callback: CallbackQuery):
                 InlineKeyboardButton(text="🛍 Перейти до каталогу", callback_data="show_catalog")
             ],
             [
-                InlineKeyboardButton(text="🔙 Назад", callback_data="back_to_qr")
+                InlineKeyboardButton(
+                    text="🔔 Відключити повідомлення" if notifications_enabled else "🔕 Увімкнути повідомлення",
+                    callback_data="toggle_notifications"
+                )
+            ],
+            [
+                InlineKeyboardButton(text="🔙 Головне меню", callback_data="back_to_menu")
             ]
         ]
     )
@@ -350,11 +326,145 @@ async def show_promotions(callback: CallbackQuery):
         "5️⃣ <b>Подвійні бали лояльності</b>\n"
         "   • 10% замість 5% кешбек\n"
         "   • На вихідних\n\n"
+        f"🔔 <b>Повідомлення про акції:</b> {'Увімкнено' if notifications_enabled else 'Вимкнено'}\n\n"
+        "⏰ <b>Акції діють обмежений час!</b>"
+    )
+    
+    await message.answer(
+        promotions_text,
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
+
+@router.callback_query(F.data == "toggle_notifications")
+async def toggle_promotion_notifications(callback: CallbackQuery):
+    """Увімкнути/вимкнути повідомлення про акції"""
+    user_id = callback.from_user.id
+    user_data = get_user_data(user_id)
+    
+    current_status = user_data.get('promotion_notifications', False)
+    new_status = not current_status
+    
+    update_user_data(user_id, {'promotion_notifications': new_status})
+    
+    status_text = "увімкнено" if new_status else "вимкнено"
+    await callback.answer(f"Повідомлення про акції {status_text}!")
+    
+    # Оновлюємо повідомлення
+    await show_promotions_callback(callback)
+
+@router.callback_query(F.data == "show_promotions")
+async def show_promotions_callback(callback: CallbackQuery):
+    """Показати акції через callback"""
+    user_id = callback.from_user.id
+    user_data = get_user_data(user_id)
+    
+    notifications_enabled = user_data.get('promotion_notifications', False)
+    
+    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+    
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="🛍 Перейти до каталогу", callback_data="show_catalog")
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔔 Відключити повідомлення" if notifications_enabled else "🔕 Увімкнути повідомлення",
+                    callback_data="toggle_notifications"
+                )
+            ],
+            [
+                InlineKeyboardButton(text="🔙 Головне меню", callback_data="back_to_menu")
+            ]
+        ]
+    )
+    
+    promotions_text = (
+        "🎁 <b>Поточні акції та знижки</b>\n\n"
+        "🔥 <b>Гарячі пропозиції:</b>\n\n"
+        "1️⃣ <b>Знижка 20% на засоби для прибирання</b>\n"
+        "   • ECO Baby Clean - 71.99 грн замість 89.99 грн\n"
+        "   • Glass Master Pro - 52.40 грн замість 65.50 грн\n"
+        "   • Multi-Surface Cleaner - 58.60 грн замість 73.25 грн\n\n"
+        "2️⃣ <b>Купи 2 - отримай 3-й безкоштовно</b>\n"
+        "   • На всю косметику для обличчя\n"
+        "   • Діє до кінця місяця\n\n"
+        "3️⃣ <b>Знижка 15% на парфуми</b>\n"
+        "   • При покупці від 500 грн\n"
+        "   • Промокод: PARFUM15\n\n"
+        "4️⃣ <b>Безкоштовна доставка</b>\n"
+        "   • При замовленні від 300 грн\n"
+        "   • По всій Україні\n\n"
+        "5️⃣ <b>Подвійні бали лояльності</b>\n"
+        "   • 10% замість 5% кешбек\n"
+        "   • На вихідних\n\n"
+        f"🔔 <b>Повідомлення про акції:</b> {'Увімкнено' if notifications_enabled else 'Вимкнено'}\n\n"
         "⏰ <b>Акції діють обмежений час!</b>"
     )
     
     await callback.message.edit_text(
         promotions_text,
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
+    await callback.answer()
+
+@router.callback_query(F.data == "show_catalog")
+async def show_catalog_callback(callback: CallbackQuery):
+    """Показати каталог через callback"""
+    try:
+        from utils.catalog import get_all_categories
+        from keyboards.catalog_keyboards import get_categories_keyboard
+        
+        categories = get_all_categories()
+        
+        if not categories:
+            await callback.message.edit_text(
+                "😔 Каталог товарів поки порожній"
+            )
+            return
+
+        await callback.message.edit_text(
+            "🛍 <b>Каталог товарів CleanWay</b>\n\n"
+            "Оберіть категорію товарів:",
+            reply_markup=get_categories_keyboard(categories),
+            parse_mode="HTML"
+        )
+        await callback.answer()
+    except Exception as e:
+        await callback.answer("❌ Помилка при завантаженні каталогу", show_alert=True)
+
+@router.callback_query(F.data == "my_coupons")
+async def show_my_coupons(callback: CallbackQuery):
+    """Показати купони користувача"""
+    user_id = callback.from_user.id
+    
+    # Тут би була логіка отримання купонів користувача
+    # Поки що показуємо доступні купони
+    
+    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+    
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="🔙 Назад до QR карти", callback_data="back_to_qr")
+            ]
+        ]
+    )
+    
+    coupons_text = (
+        "🎟 <b>Ваші купони</b>\n\n"
+        "У вас поки немає активних купонів.\n\n"
+        "💡 <b>Як отримати купони:</b>\n"
+        "• Робіть покупки та накопичуйте бали\n"
+        "• Слідкуйте за акціями в розділі \"🎁 Акції\"\n"
+        "• Підписуйтесь на наші соціальні мережі\n\n"
+        "🎯 Перегляньте поточні акції, щоб не пропустити вигідні пропозиції!"
+    )
+    
+    await callback.message.edit_text(
+        coupons_text,
         reply_markup=keyboard,
         parse_mode="HTML"
     )
@@ -407,15 +517,18 @@ async def back_to_qr_card(callback: CallbackQuery):
     from utils.loyalty import get_user_loyalty_points
     loyalty_points = get_user_loyalty_points(user_id)
     
-    qr_code = f"CW{user_id:08d}"
+    # Генеруємо унікальний QR код для користувача у форматі коду
+    import hashlib
+    hash_object = hashlib.md5(str(user_id).encode())
+    hex_dig = hash_object.hexdigest()[:8].upper()
+    qr_code = f"CW-{hex_dig[:4]}-{hex_dig[4:]}"
     
     from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
     
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="🎟 Мої купони", callback_data="my_coupons"),
-                InlineKeyboardButton(text="🎁 Акції", callback_data="show_promotions")
+                InlineKeyboardButton(text="🎟 Мої купони", callback_data="my_coupons")
             ],
             [
                 InlineKeyboardButton(text="📊 Історія балів", callback_data="points_history")

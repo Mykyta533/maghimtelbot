@@ -50,13 +50,13 @@ def get_product_keyboard(product_id, current_index=0, total_products=1, category
         [
             InlineKeyboardButton(
                 text="🛒 Додати до кошика",
-                callback_data=f"add_to_cart_{product_id}"
+                callback_data=f"add_cart_{product_id}"
             )
         ],
         [
             InlineKeyboardButton(
                 text="🧾 Замовити зараз",
-                callback_data=f"order_now_{product_id}"
+                callback_data=f"order_{product_id}"
             )
         ]
     ])
