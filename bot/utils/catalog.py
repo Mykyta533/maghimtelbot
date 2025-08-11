@@ -1,14 +1,15 @@
 import json
 import os
+from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Визначаємо базову директорію проєкту (корінь)
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+# Визначаємо базову директорію проєкту
+BASE_DIR = Path(__file__).parent.parent.parent
 
 # Повний шлях до файлу catalog.json у корені проєкту
-CATALOG_FILE = os.path.join(BASE_DIR, "catalog.json")
+CATALOG_FILE = BASE_DIR / "catalog.json"
 
 def load_catalog():
     """Завантаження каталогу товарів"""

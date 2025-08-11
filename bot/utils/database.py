@@ -1,11 +1,13 @@
 """Простий файловий менеджер даних (замість БД)"""
 import json
 import os
+from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional
 
-# Шляхи до файлів даних
-DATA_DIR = "data"
+# Шляхи до файлів даних - використовуємо абсолютний шлях
+BASE_DIR = Path(__file__).parent.parent
+DATA_DIR = BASE_DIR / "data"
 USERS_FILE = os.path.join(DATA_DIR, "users.json")
 CART_FILE = os.path.join(DATA_DIR, "cart.json")
 ORDERS_FILE = os.path.join(DATA_DIR, "orders.json")
@@ -13,12 +15,12 @@ LOYALTY_FILE = os.path.join(DATA_DIR, "loyalty.json")
 
 async def init_db():
     """Ініціалізація файлової системи даних"""
-    if not os.path.exists(DATA_DIR):
-        os.makedirs(DATA_DIR)
+    if not DATA_DIR.exists():
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
     
     # Створюємо файли якщо їх немає
     for file_path in [USERS_FILE, CART_FILE, ORDERS_FILE, LOYALTY_FILE]:
-        if not os.path.exists(file_path):
+        if not Path(file_path).exists():
             with open(file_path, 'w', encoding='utf-8') as f:
                 json.dump({}, f, ensure_ascii=False, indent=2)
 
