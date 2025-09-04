@@ -1,19 +1,12 @@
 #!/usr/bin/env python3
 """
-CleanWay Telegram Bot - Main Entry Point for Replit
+CleanWay Telegram Bot - Main Entry Point for Render
 """
 import asyncio
 import logging
 import os
 import sys
 from pathlib import Path
-
-# Імпортуємо keep_alive для Replit
-try:
-    from keep_alive import keep_alive
-    keep_alive()
-except ImportError:
-    logging.warning("Keep-alive модуль не знайдено, пропускаємо...")
 
 # Додаємо bot директорію до Python path
 bot_dir = Path(__file__).parent / "bot"
@@ -30,15 +23,15 @@ from utils.database import init_db
 
 # Завантаження змінних середовища
 env_path = bot_dir / ".env"
-load_dotenv(env_path)
+if env_path.exists():
+    load_dotenv(env_path)
 
 # Налаштування логування
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('bot.log')
+        logging.StreamHandler(sys.stdout)
     ]
 )
 logger = logging.getLogger(__name__)
