@@ -7,6 +7,8 @@ import logging
 import os
 import sys
 from pathlib import Path
+from threading import Thread
+import time
 
 # Додаємо bot директорію до Python path
 bot_dir = Path(__file__).parent / "bot"
@@ -36,18 +38,47 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Keep-alive веб сервер для Render
+def keep_alive():
+    """Простий веб-сервер для підтримки активності на Render"""
+    from flask import Flask
+    
+    app = Flask(__name__)
+    
+    @app.route('/')
+    def home():
+        return '''
+        <html>
+        <head><title>CleanWay Bot Status</title></head>
+        <body style="font-family: Arial; text-align: center; padding: 50px;">
+            <h1>🤖 CleanWay Telegram Bot</h1>
+            <p>✅ Бот активний та працює!</p>
+            <p>🕒 Час: ''' + time.strftime('%Y-%m-%d %H:%M:%S') + '''</p>
+        </body>
+        </html>
+        '''
+    
+    @app.route('/health')
+    def health():
+        return {'status': 'ok', 'bot': 'running'}
+    
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port, debug=False)
+
 async def main():
     """Головна функція запуску бота"""
     
     # Отримання токена бота
     bot_token = os.getenv('BOT_TOKEN')
     if not bot_token:
-        logger.error("BOT_TOKEN не знайдено в змінних середовища!")
+        logger.error("❌ BOT_TOKEN не знайдено в змінних середовища!")
+        logger.error("Додайте BOT_TOKEN в Environment Variables на Render")
         return
     
     logger.info(f"🤖 Запуск CleanWay бота...")
     logger.info(f"📁 Робоча директорія: {os.getcwd()}")
     logger.info(f"🔧 Bot директорія: {bot_dir}")
+    logger.info(f"🐍 Python версія: {sys.version}")
     
     # Ініціалізація бота та диспетчера
     bot = Bot(
@@ -74,6 +105,11 @@ async def main():
         # Перевірка підключення до Telegram
         bot_info = await bot.get_me()
         logger.info(f"✅ Підключено до Telegram як @{bot_info.username}")
+        
+        # Запуск keep-alive сервера в окремому потоці
+        server_thread = Thread(target=keep_alive, daemon=True)
+        server_thread.start()
+        logger.info("✅ Keep-alive сервер запущено")
         
         logger.info("🚀 CleanWay бот запущено успішно!")
         
